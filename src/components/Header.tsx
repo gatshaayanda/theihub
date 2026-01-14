@@ -1,54 +1,110 @@
-'use client';
+// src/components/Header.tsx
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, PhoneCall, LogOut } from 'lucide-react';
-import LogoScentsMark from '@/components/LogoMktMark';
-import ThemeToggle from '@/components/ThemeToggle';
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Menu,
+  X,
+  ShoppingBag,
+  Smartphone,
+  Laptop,
+  Watch,
+  Shirt,
+  Footprints,
+  Tag,
+  MessageCircle,
+  LogOut,
+  Search,
+  Radio,
+} from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
-const CLIENT_LOGIN_PATH = '/client/login';
-const CLIENT_PORTAL_PATH = '/client/dashboard';
+const WHATSAPP_NUMBER = "+26778768259";
+const WHATSAPP_CHANNEL =
+  "https://whatsapp.com/channel/0029Vb6s2BE3LdQZJGmxQf1W";
+
+const CLIENT_LOGIN_PATH = "/client/login";
+const CLIENT_PORTAL_PATH = "/client/dashboard";
 
 const nav = [
-  { label: 'Home', href: '/' },
-  { label: 'Our Suites', href: '/room-styles' },
-  { label: 'Scents I Love', href: '/shop' },
-  { label: 'Dining', href: '/dining' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Things To Do', href: '/gallery' },
-  { label: 'Contact', href: '/contact' },
+  { label: "Shop", href: "/", icon: <ShoppingBag size={18} /> },
+  { label: "Phones", href: "/c/phones", icon: <Smartphone size={18} /> },
+  { label: "Laptops", href: "/c/laptops", icon: <Laptop size={18} /> },
+  { label: "Gadgets", href: "/c/gadgets", icon: <Watch size={18} /> },
+  { label: "Clothing", href: "/c/clothing", icon: <Shirt size={18} /> },
+  { label: "Shoes", href: "/c/shoes", icon: <Footprints size={18} /> },
+  { label: "Deals", href: "/deals", icon: <Tag size={18} /> },
 ];
+
+function waLink(message: string) {
+  const digits = WHATSAPP_NUMBER.replace(/[^\d]/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
+
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
-    const hasRole = (document.cookie || '')
-      .split(';')
-      .some((c) => c.trim().startsWith('role='));
+    const hasRole = (document.cookie || "")
+      .split(";")
+      .some((c) => c.trim().startsWith("role="));
     setAuthed(hasRole);
   }, [pathname]);
 
   const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname?.startsWith(href);
+    href === "/" ? pathname === "/" : pathname?.startsWith(href);
 
   const close = () => setOpen(false);
 
   const onLogout = () => {
     try {
       document.cookie = `role=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-      localStorage.removeItem('mkt_client_authed');
+      localStorage.removeItem("mkt_client_authed");
     } catch {}
     setAuthed(false);
-    router.push('/');
+    router.push("/");
+  };
+
+  const brand = useMemo(
+    () => (
+      <Link
+        href="/"
+        onClick={close}
+        aria-label="iHub — Home"
+        className="flex items-center gap-2.5 select-none"
+        prefetch={false}
+      >
+        <span className="grid place-items-center h-9 w-9 rounded-xl border border-[--border] bg-[--surface] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+          <Radio size={18} className="text-[--brand-primary]" />
+        </span>
+        <span className="text-base sm:text-lg md:text-xl font-extrabold tracking-tight text-[--foreground] whitespace-nowrap">
+          iHub
+        </span>
+        <span className="hidden sm:inline text-xs md:text-sm font-semibold text-[--muted] whitespace-nowrap">
+          Tech • Gadgets • Orders on WhatsApp
+        </span>
+      </Link>
+    ),
+    []
+  );
+
+  const onSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = q.trim();
+    if (!term) return;
+    close();
+    router.push(`/search?q=${encodeURIComponent(term)}`);
   };
 
   return (
-    <header className="w-full z-50 bg-[--brand-primary] text-white border-b border-[--brand-accent]/20 shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-all duration-500 overflow-x-hidden">
+    <header className="w-full z-50 bg-[--background] text-[--foreground] border-b border-[--border] overflow-x-hidden">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white text-black px-3 py-2 rounded"
@@ -57,79 +113,79 @@ export default function Header() {
       </a>
 
       {/* Top Row */}
-      <div className="container flex items-center justify-between py-2.5 md:py-3.5">
+      <div className="container flex items-center justify-between py-3 md:py-3.5 gap-3">
         {/* Brand */}
-        <Link
-          href="/"
-          onClick={close}
-          aria-label="Scents & Suites — Home"
-          className="flex items-center gap-2.5 select-none"
-          prefetch={false}
-        >
-          <LogoScentsMark className="h-6 w-6 md:h-7 md:w-7 drop-glow pulse-slow" />
-          <span className="text-base sm:text-lg md:text-xl font-serif font-semibold tracking-[0.3em] text-[--brand-accent] uppercase whitespace-nowrap">
-            Scents & Suites
-          </span>
-        </Link>
+        {brand}
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="Primary">
-          {nav.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={close}
-              className={`text-white/90 hover:text-white transition font-medium ${
-                isActive(item.href)
-                  ? 'underline underline-offset-8 decoration-[--brand-accent]'
-                  : ''
-              }`}
-              prefetch={false}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop: Search */}
+        <form
+          onSubmit={onSearch}
+          className="hidden md:flex flex-1 max-w-[520px] mx-4"
+          role="search"
+          aria-label="Search products"
+        >
+          <div className="w-full relative">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[--muted]"
+            />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search iPhones, Samsung, laptops, shoes…"
+              className="input pl-10 pr-3 py-2.5"
+            />
+          </div>
+        </form>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <ThemeToggle />
+
+          <a
+            href={waLink("Hi iHub 👋 I need help with an order / prices.")}
+            className="btn btn-outline"
+            aria-label="Chat on WhatsApp"
+          >
+            <MessageCircle size={18} />
+            WhatsApp
+          </a>
+
+          <a
+            href={WHATSAPP_CHANNEL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline"
+            aria-label="Follow WhatsApp Channel"
+          >
+            <Radio size={18} />
+            Channel
+          </a>
+
           {!authed ? (
-            <>
-              <Link
-                href={CLIENT_LOGIN_PATH}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm font-medium hover:bg-[--brand-accent]/10 transition"
-                style={{
-                  borderColor: 'var(--brand-accent)',
-                  color: 'var(--brand-accent)',
-                }}
-                prefetch={false}
-              >
-                Log In
-              </Link>
-              <Link
-                href="/booking"
-                className="btn-accent text-sm font-semibold px-3 py-1.5"
-                prefetch={false}
-              >
-                Book a Stay
-              </Link>
-            </>
+            <Link
+              href={CLIENT_LOGIN_PATH}
+              className="btn btn-primary"
+              prefetch={false}
+            >
+              Admin Login
+            </Link>
           ) : (
             <>
               <Link
                 href={CLIENT_PORTAL_PATH}
-                className="btn-navy text-sm font-semibold px-3 py-1.5"
+                className="btn btn-outline"
                 prefetch={false}
               >
-                My Portal
+                Dashboard
               </Link>
               <button
                 type="button"
                 onClick={onLogout}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded text-white/90 hover:text-white text-sm"
+                className="btn btn-outline"
               >
-                <LogOut size={16} /> Logout
+                <LogOut size={18} />
+                Logout
               </button>
             </>
           )}
@@ -139,113 +195,161 @@ export default function Header() {
         <button
           type="button"
           onClick={() => setOpen((s) => !s)}
-          className="md:hidden p-2 text-white"
+          className="md:hidden p-2 rounded-lg border border-[--border] bg-[--surface] text-[--foreground]"
           aria-label="Toggle menu"
           aria-expanded={open}
           aria-controls="mobile-menu"
         >
-          {open ? <X size={24} /> : <Menu size={24} />}
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
+      </div>
+
+      {/* Desktop Nav */}
+      <div className="hidden md:block border-t border-[--border]">
+        <div className="container flex items-center gap-2 py-2">
+          <nav className="flex items-center gap-1 flex-wrap" aria-label="Primary">
+            {nav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`menu-link ${
+                  isActive(item.href)
+                    ? "bg-white/5 border border-[--border] text-[--foreground]"
+                    : ""
+                }`}
+                prefetch={false}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
 
       {/* Mobile Drawer */}
       <div
         id="mobile-menu"
-        className={`md:hidden overflow-hidden transition-[max-height] duration-400 ${
-          open ? 'max-h-[80vh]' : 'max-h-0'
+        className={`md:hidden overflow-hidden transition-[max-height] duration-300 ${
+          open ? "max-h-[85vh]" : "max-h-0"
         }`}
         aria-hidden={!open}
       >
-        <div className="px-4 pb-4 pt-2 bg-[--brand-primary] border-t border-white/10">
-          <div className="flex flex-col gap-4">
+        <div className="px-4 pb-4 pt-3 bg-[--background] border-t border-[--border]">
+          {/* Mobile Search */}
+          <form onSubmit={onSearch} className="mb-3" role="search">
+            <div className="relative">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[--muted]"
+              />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search products…"
+                className="input pl-10 pr-3 py-2.5"
+              />
+            </div>
+          </form>
+
+          {/* Mobile Nav */}
+          <div className="flex flex-col gap-2">
             {nav.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
                 onClick={close}
-                className="text-white text-base"
+                className={`menu-link justify-between ${
+                  isActive(item.href)
+                    ? "bg-white/5 border border-[--border] text-[--foreground]"
+                    : ""
+                }`}
                 prefetch={false}
               >
-                {item.label}
+                <span className="inline-flex items-center gap-2">
+                  {item.icon}
+                  {item.label}
+                </span>
+                <span className="text-[--muted]">›</span>
               </Link>
             ))}
 
-            <div className="h-px bg-white/10 my-1" />
-            <ThemeToggle />
+            <div className="h-px bg-white/10 my-2" />
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-[--muted]">
+                Theme
+              </span>
+              <ThemeToggle />
+            </div>
+
+            <div className="h-px bg-white/10 my-2" />
+
+            <a
+              href={waLink("Hi iHub 👋 I want to place an order.")}
+              onClick={close}
+              className="btn btn-primary w-full"
+            >
+              <MessageCircle size={18} />
+              Order on WhatsApp
+            </a>
+
+            <a
+              href={WHATSAPP_CHANNEL}
+              target="_blank"
+              rel="noreferrer"
+              onClick={close}
+              className="btn btn-outline w-full"
+            >
+              <Radio size={18} />
+              Follow Channel
+            </a>
 
             {!authed ? (
-              <>
-                <Link
-                  href={CLIENT_LOGIN_PATH}
-                  onClick={close}
-                  className="btn-navy w-full text-center"
-                  prefetch={false}
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/booking"
-                  onClick={close}
-                  className="btn-accent w-full text-center"
-                  prefetch={false}
-                >
-                  Book a Stay
-                </Link>
-              </>
+              <Link
+                href={CLIENT_LOGIN_PATH}
+                onClick={close}
+                className="btn btn-outline w-full"
+                prefetch={false}
+              >
+                Admin Login
+              </Link>
             ) : (
               <>
                 <Link
                   href={CLIENT_PORTAL_PATH}
                   onClick={close}
-                  className="btn-navy w-full text-center"
+                  className="btn btn-outline w-full"
                   prefetch={false}
                 >
-                  My Portal
+                  Dashboard
                 </Link>
                 <button
                   type="button"
-                  onClick={onLogout}
-                  className="w-full text-center inline-flex items-center justify-center gap-2 px-4 py-2 rounded text-white/90 hover:text-white"
+                  onClick={() => {
+                    close();
+                    onLogout();
+                  }}
+                  className="btn btn-outline w-full"
                 >
-                  <LogOut size={18} /> Logout
+                  <LogOut size={18} />
+                  Logout
                 </button>
               </>
             )}
 
+            <div className="h-px bg-white/10 my-2" />
+
             <a
-              href="tel:+26771680243"
-              className="inline-flex items-center gap-2 text-white/90 mt-2"
+              href={`tel:${WHATSAPP_NUMBER.replace(/\s/g, "")}`}
+              className="inline-flex items-center gap-2 text-[--muted] text-sm"
             >
-              <PhoneCall size={18} /> +267 716 80243 / 722 02747
+              <MessageCircle size={16} />
+              {WHATSAPP_NUMBER}
             </a>
           </div>
         </div>
       </div>
-
-      {/* Logo Pulse */}
-      <style jsx global>{`
-        @keyframes pulseSoft {
-          0%, 100% {
-            transform: scale(1);
-            filter: drop-shadow(0 0 5px rgba(184, 155, 89, 0.45));
-          }
-          50% {
-            transform: scale(1.03);
-            filter: drop-shadow(0 0 10px rgba(214, 182, 120, 0.8));
-          }
-        }
-        .pulse-slow {
-          animation: pulseSoft 5s ease-in-out infinite;
-          transform-origin: center;
-        }
-        .drop-glow {
-          filter: drop-shadow(0 0 6px rgba(184, 155, 89, 0.45));
-          transition: filter 0.3s ease;
-        }
-        .drop-glow:hover {
-          filter: drop-shadow(0 0 10px rgba(214, 182, 120, 0.7));
-        }
-      `}</style>
     </header>
   );
 }

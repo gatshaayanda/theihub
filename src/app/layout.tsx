@@ -1,53 +1,67 @@
-import type { Metadata } from 'next';
-import { Montserrat, Cormorant_Garamond } from 'next/font/google';
-import './globals.css';
-import { AnalyticsProvider } from '@/components/AnalyticsProvider';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import Loader from '@/components/AdminHubLoader';
-import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import ChatWidget from "@/components/ChatWidget";
-import ThemeHydrationScript from '@/components/ThemeHydrationScript';
+// src/app/layout.tsx
+import type { Metadata } from "next";
+import { Montserrat, Inter } from "next/font/google";
+import "./globals.css";
 
-// Replace Geist with your actual fonts
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import Loader from "@/components/AdminHubLoader";
+import ChatWidget from "@/components/ChatWidget";
+import ThemeHydrationScript from "@/components/ThemeHydrationScript";
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 const montserrat = Montserrat({
-  variable: '--font-sans',
-  subsets: ['latin'],
-  weight: ['400', '600'],
-  display: 'swap',
+  variable: "--font-sans",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
-const cormorant = Cormorant_Garamond({
-  variable: '--font-serif',
-  subsets: ['latin'],
-  weight: ['400', '600'],
-  display: 'swap',
+const inter = Inter({
+  variable: "--font-ui",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: 'Scents & Suites Luxury Villa',
+  title: "iHub — Tech, Gadgets, Phones & Laptops",
   description:
-    'A private, elegant guest house in Village, Gaborone. Premium room bookings, gallery, and experience.',
+    "Browse phones, laptops, gadgets, and more. View prices and place an order directly on WhatsApp. Also available: clothing and shoes on request.",
+  applicationName: "iHub",
+  metadataBase: new URL("https://example.com"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${montserrat.variable} ${cormorant.variable}`}>
-        <head>
+    <html lang="en" className={`${montserrat.variable} ${inter.variable}`}>
+      <head>
         <ThemeHydrationScript />
-        {/* Other <head> stuff */}
       </head>
-      <body className="min-h-screen flex flex-col antialiased bg-[--background] text-[--foreground] font-sans">
+
+      <body className="min-h-screen bg-[--background] text-[--foreground] font-sans antialiased">
+        {/* ✅ Loader must be FIRST in body */}
+        <Loader />
+
         <AnalyticsProvider>
-          <Loader />
-          <div className="sticky top-0 z-50 bg-[--background] backdrop-blur border-b border-[--brand-secondary] shadow-sm">
-            <Header />
+          {/* ✅ Proper shell with footer guaranteed at bottom */}
+          <div className="min-h-screen flex flex-col">
+            <div className="sticky top-0 z-50 bg-[--background]/80 backdrop-blur border-b border-[--border]">
+              <Header />
+            </div>
+
+            <main className="flex-1">{children}</main>
+
+            {/* ✅ Footer will now always render visibly at page end */}
+            <Footer />
           </div>
-          <main className="flex-grow">{children}</main>
-          <Footer />
-          <Analytics />
+
           <ChatWidget />
+
+          <Analytics />
           <SpeedInsights />
         </AnalyticsProvider>
       </body>

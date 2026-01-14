@@ -1,101 +1,147 @@
-'use client';
+// src/components/LogoMktMark.tsx
+"use client";
+
+import type React from "react";
 
 type Props = React.SVGProps<SVGSVGElement>;
 
 /**
- * LogoScentsMark — Scents & Suites perfume droplet
- * Enhanced for luxury identity:
- * - Dual-layer gold gradient for natural light diffusion
- * - Whisper-slow shimmer sweep every 8s
- * - Gentle breathing pulse tied to loader’s curve
- * - Subtle white edge halo for depth
+ * iHub Mark — Tech Orb
+ * - Neon brand gradient (blue → purple → green)
+ * - Slow shimmer sweep
+ * - Gentle breathing pulse
+ * - Clean rim + subtle depth shadow
  */
-export default function LogoScentsMark(props: Props) {
+export default function LogoMktMark(props: Props) {
   return (
     <svg
       viewBox="0 0 64 64"
       role="img"
-      aria-label="Scents & Suites Mark"
+      aria-label="iHub Mark"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={`drop-pulse ${props.className || ''}`}
+      className={`hub-pulse ${props.className || ""}`}
     >
       <defs>
-        {/* Base gold gradient */}
-        <radialGradient id="baseGold" cx="50%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#FFE6A3" />
-          <stop offset="45%" stopColor="#D6B678" />
-          <stop offset="100%" stopColor="#4C1F26" />
+        {/* Base neon gradient */}
+        <linearGradient id="hubGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="var(--brand-primary)" />
+          <stop offset="55%" stopColor="var(--brand-accent)" />
+          <stop offset="100%" stopColor="var(--brand-secondary)" />
+        </linearGradient>
+
+        {/* Inner glow */}
+        <radialGradient id="hubGlow" cx="50%" cy="40%" r="65%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.85)" />
+          <stop offset="25%" stopColor="rgba(168,85,247,0.55)" />
+          <stop offset="60%" stopColor="rgba(37,99,235,0.35)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
 
-        {/* Soft shimmer highlight */}
+        {/* Soft shimmer sweep */}
         <linearGradient id="sweep" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-          <stop offset="40%" stopColor="rgba(255,255,255,0.9)">
+          <stop offset="45%" stopColor="rgba(255,255,255,0.85)">
             <animate
               attributeName="offset"
               values="-1; 2"
-              dur="8s"
+              dur="7.5s"
               repeatCount="indefinite"
             />
           </stop>
           <stop offset="100%" stopColor="rgba(255,255,255,0)" />
         </linearGradient>
 
-        {/* Blend shimmer mask */}
         <mask id="sweepMask">
           <rect width="64" height="64" fill="url(#sweep)" />
         </mask>
       </defs>
 
       {/* Depth shadow */}
-      <path
-        d="M32 2C26 12 16 24 16 36c0 8.8 7.2 16 16 16s16-7.2 16-16c0-12-10-24-16-34Z"
-        fill="#000"
-        opacity="0.18"
-      />
+      <circle cx="32" cy="32" r="18" fill="#000" opacity="0.22" />
 
-      {/* Primary gold droplet */}
+      {/* Orb */}
       <g mask="url(#sweepMask)">
-        <path
-          d="M32 2C26 12 16 24 16 36c0 8.8 7.2 16 16 16s16-7.2 16-16c0-12-10-24-16-34Z"
-          fill="url(#baseGold)"
-          stroke="white"
-          strokeWidth="1.4"
-          strokeLinejoin="round"
-        />
+        <circle cx="32" cy="32" r="18" fill="url(#hubGrad)" />
       </g>
 
-      {/* Inner halo rim for light depth */}
-      <path
-        d="M32 2C26 12 16 24 16 36c0 8.8 7.2 16 16 16s16-7.2 16-16c0-12-10-24-16-34Z"
+      {/* Glow bloom */}
+      <circle cx="32" cy="32" r="26" fill="url(#hubGlow)" opacity="0.75" />
+
+      {/* Rim */}
+      <circle
+        cx="32"
+        cy="32"
+        r="18"
         fill="none"
-        stroke="rgba(255,255,255,0.5)"
-        strokeWidth="0.8"
+        stroke="rgba(255,255,255,0.55)"
+        strokeWidth="0.9"
       />
 
+      {/* Circuit ring */}
+      <circle
+        cx="32"
+        cy="32"
+        r="24"
+        fill="none"
+        stroke="url(#hubGrad)"
+        strokeWidth="1.6"
+        strokeDasharray="7 6"
+        className="spin-slow"
+        opacity="0.9"
+      />
+
+      {/* Nodes */}
+      <circle cx="14" cy="22" r="2" fill="var(--brand-primary)" opacity="0.95" />
+      <circle cx="50" cy="18" r="2" fill="var(--brand-accent)" opacity="0.95" />
+      <circle cx="52" cy="46" r="2" fill="var(--brand-secondary)" opacity="0.95" />
+      <circle cx="18" cy="50" r="2" fill="var(--brand-primary)" opacity="0.95" />
+
       <style jsx>{`
-        /* Gentle breathing pulse, synced to loader easing */
         @keyframes pulseSoft {
-          0%, 100% {
+          0%,
+          100% {
             transform: scale(1);
-            filter: drop-shadow(0 0 6px rgba(184,155,89,0.45))
-                    drop-shadow(0 0 12px rgba(214,182,120,0.3));
+            filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.26))
+              drop-shadow(0 0 16px rgba(168, 85, 247, 0.18))
+              drop-shadow(0 0 18px rgba(52, 211, 153, 0.12));
           }
           50% {
-            transform: scale(1.035);
-            filter: drop-shadow(0 0 12px rgba(214,182,120,0.7))
-                    drop-shadow(0 0 22px rgba(184,155,89,0.4));
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 14px rgba(96, 165, 250, 0.38))
+              drop-shadow(0 0 22px rgba(168, 85, 247, 0.24))
+              drop-shadow(0 0 26px rgba(52, 211, 153, 0.18));
           }
         }
-        .drop-pulse {
-          animation: pulseSoft 5.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+        .hub-pulse {
+          animation: pulseSoft 5.2s cubic-bezier(0.45, 0, 0.25, 1) infinite;
           transform-origin: center;
           transition: filter 0.8s ease;
         }
-        .drop-pulse:hover {
-          filter: drop-shadow(0 0 16px rgba(214,182,120,0.8))
-                  drop-shadow(0 0 28px rgba(184,155,89,0.5));
+        .hub-pulse:hover {
+          filter: drop-shadow(0 0 16px rgba(96, 165, 250, 0.44))
+            drop-shadow(0 0 26px rgba(168, 85, 247, 0.28))
+            drop-shadow(0 0 32px rgba(52, 211, 153, 0.22));
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+        .spin-slow {
+          transform-origin: 32px 32px;
+          animation: spin 8s linear infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation: none !important;
+            transition: none !important;
+          }
         }
       `}</style>
     </svg>
