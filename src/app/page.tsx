@@ -121,7 +121,7 @@ export default function HomePage() {
 
             <Link
               href="/c/phones"
-              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-white hover:brightness-110 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#000000] bg-blue-800 hover:brightness-110 transition"
             >
               <ShoppingBag size={18} />
               Browse Prices
@@ -230,7 +230,7 @@ export default function HomePage() {
             </a>
             <Link
               href="/deals"
-              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-white hover:brightness-110 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-blue-800 hover:brightness-110 transition"
             >
               View Deals
             </Link>
@@ -302,7 +302,7 @@ export default function HomePage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/c/phones"
-              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-white hover:brightness-110 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-blue-800 hover:brightness-110 transition"
             >
               Browse Prices
             </Link>
