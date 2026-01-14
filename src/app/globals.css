@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+:root {
+  /* Light Mode */
+  --background: #1e1a1a;          /* Deep Burgundy */
+  --foreground: #f5f5f4;          /* Soft Cream White */
+
+  --brand-primary: #4c1f26;       /* Burgundy */
+  --brand-secondary: #b89b59;     /* Weathered Gold */
+  --brand-accent: #eae4d3;        /* Light Gold Shell */
+
+  --font-sans: 'Montserrat', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #121212;
+    --foreground: #f0f0eb;
+    --brand-primary: #3a191e;
+    --brand-secondary: #b89b59;
+    --brand-accent: #d6c5a6;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+h1, h2, h3, h4 {
+  color: var(--brand-secondary);
+  font-weight: 700;
+  font-family: var(--font-serif);
+}
+
+a {
+  color: var(--brand-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a:hover,
+a:focus {
+  color: var(--brand-accent);
+  text-decoration: underline;
+  outline: none;
+}
+
+button {
+  background: linear-gradient(to bottom right, var(--brand-secondary), var(--brand-primary));
+  color: white;
+  padding: 0.65rem 1.3rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+button:hover,
+button:focus {
+  background: var(--brand-accent);
+  color: var(--foreground);
+  outline: none;
+}
+
+.card {
+  background-color: white;
+  color: #1e1a1a;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.form-input {
+  background: #fff;
+  color: #1e1a1a;
+  border: 1px solid #ccc;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.form-input:focus {
+  border-color: var(--brand-secondary);
+  box-shadow: 0 0 0 3px rgba(184, 155, 89, 0.3);
+  outline: none;
+}
+
+.menu-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  color: var(--brand-secondary);
+  font-weight: 500;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  transition: color 0.3s ease, background 0.3s ease;
+}
+.menu-link:hover,
+.menu-link:focus {
+  background-color: var(--brand-accent);
+  color: var(--background);
+  border-radius: 0.4rem;
+  outline: none;
+}
+
+
+/* Light theme (default) */
+:root {
+  --brand-primary: #4C1F26;
+  --brand-secondary: #B89B59;
+  --brand-accent: #EAE4D3;
+  /* etc */
+}
+
+/* Dark theme override */
+[data-theme='dark'] {
+  --brand-primary: #1a1a1a;
+  --brand-secondary: #f5d67d;
+  --brand-accent: #ddd2ba;
+}
