@@ -347,7 +347,7 @@ export default function HomePage() {
               href={WHATSAPP_CHANNEL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-white hover:brightness-110 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 font-semibold text-sm text-[#0B0F19] bg-blue-800 hover:brightness-110 transition"
             >
               Follow WhatsApp Channel
             </a>
