@@ -4,12 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { firestore } from "@/utils/firebaseConfig";
 
 const WHATSAPP_NUMBER = "+26778768259";
-const CHANNEL_URL =
-  "https://whatsapp.com/channel/0029Vb6s2BE3LdQZJGmxQf1W";
+const CHANNEL_URL = "https://whatsapp.com/channel/0029Vb6s2BE3LdQZJGmxQf1W";
 
 type Category = "phones" | "laptops" | "gadgets" | "clothing" | "shoes";
 
@@ -19,11 +18,11 @@ type Product = {
   category: Category;
   brand?: string;
   price: number;
-  dealPrice?: number;
+  dealPrice?: number | null;
   isDeal: boolean;
   inStock: boolean;
   imageUrl: string;
-  description?: string;
+  description?: string | null;
 };
 
 function waLink(text: string) {
@@ -31,19 +30,22 @@ function waLink(text: string) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
+const VALID_CATEGORIES: Category[] = ["phones", "laptops", "gadgets", "clothing", "shoes"];
+
 export default function CategoryPage() {
   const params = useParams<{ category: string }>();
-  const category = (params?.category || "").toLowerCase() as Category;
+  const raw = (params?.category || "").toLowerCase();
+  const category = (VALID_CATEGORIES.includes(raw as Category) ? raw : "phones") as Category;
 
   const label = useMemo(() => {
-    const map: Record<string, string> = {
+    const map: Record<Category, string> = {
       phones: "Phones",
       laptops: "Laptops",
       gadgets: "Gadgets",
       clothing: "Clothing",
       shoes: "Shoes",
     };
-    return map[category] || "Products";
+    return map[category];
   }, [category]);
 
   const [items, setItems] = useState<Product[]>([]);
@@ -56,15 +58,11 @@ export default function CategoryPage() {
       try {
         setLoading(true);
 
-        const q = query(
-          collection(firestore, "products"),
-          where("category", "==", category),
-          orderBy("updatedAt", "desc")
-        );
-
+        // ✅ no orderBy → no composite index required
+        const q = query(collection(firestore, "products"), where("category", "==", category));
         const snap = await getDocs(q);
-        const data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Product[];
 
+        const data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Product[];
         if (alive) setItems(data);
       } catch (e) {
         console.error("Load category products failed:", e);
@@ -84,12 +82,8 @@ export default function CategoryPage() {
       <section className="container py-10">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              {label}
-            </h1>
-            <p className="text-sm text-white/70 mt-1">
-              Browse items and tap “Order on WhatsApp”.
-            </p>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{label}</h1>
+            <p className="text-sm text-white/70 mt-1">Browse items and tap “Order on WhatsApp”.</p>
           </div>
 
           <div className="flex gap-2">
@@ -114,23 +108,10 @@ export default function CategoryPage() {
 
         <div className="mt-8">
           {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4 animate-pulse"
-                >
-                  <div className="aspect-[4/3] rounded-xl bg-white/10" />
-                  <div className="h-4 bg-white/10 rounded mt-4 w-3/4" />
-                  <div className="h-4 bg-white/10 rounded mt-2 w-1/2" />
-                </div>
-              ))}
-            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-8">Loading…</div>
           ) : items.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-              <p className="text-white/80">
-                No items listed here yet. Check back soon.
-              </p>
+              <p className="text-white/80">No items listed here yet. Check back soon.</p>
               <div className="mt-4 flex justify-center gap-2">
                 <Link
                   href="/deals"
@@ -171,12 +152,7 @@ export default function CategoryPage() {
                     className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:bg-white/10 transition"
                   >
                     <div className="relative aspect-[4/3] bg-black/30">
-                      <Image
-                        src={p.imageUrl || "/placeholder.png"}
-                        alt={p.name}
-                        fill
-                        className="object-cover"
-                      />
+                      <Image src={p.imageUrl || "/placeholder.png"} alt={p.name} fill className="object-cover" />
                       {!p.inStock && (
                         <div className="absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold bg-black/60 border border-white/20">
                           Out of stock
@@ -193,22 +169,14 @@ export default function CategoryPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="font-semibold text-base">{p.name}</div>
-                          {p.brand && (
-                            <div className="text-xs text-white/60 mt-1">
-                              {p.brand}
-                            </div>
-                          )}
+                          {p.brand && <div className="text-xs text-white/60 mt-1">{p.brand}</div>}
                         </div>
 
                         <div className="text-right">
                           {hasDeal ? (
                             <>
-                              <div className="text-sm line-through text-white/50">
-                                P{p.price}
-                              </div>
-                              <div className="text-lg font-bold">
-                                P{p.dealPrice}
-                              </div>
+                              <div className="text-sm line-through text-white/50">P{p.price}</div>
+                              <div className="text-lg font-bold">P{p.dealPrice}</div>
                             </>
                           ) : (
                             <div className="text-lg font-bold">P{p.price}</div>
@@ -217,9 +185,7 @@ export default function CategoryPage() {
                       </div>
 
                       {p.description && (
-                        <p className="text-sm text-white/70 mt-3 line-clamp-3">
-                          {p.description}
-                        </p>
+                        <p className="text-sm text-white/70 mt-3 line-clamp-3">{p.description}</p>
                       )}
 
                       <div className="mt-4 flex gap-2">
