@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ShoppingBag,
-  MessageCircle,
-  Sparkles,
-  ShieldCheck,
-  Truck,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { firestore } from "@/utils/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
+import {
+  Search,
+  Smartphone,
+  Laptop,
+  Watch,
+  Shirt,
+  Footprints,
+  Tag,
+  ShoppingCart,
+  Sparkles,
+} from "lucide-react";
 
 /* ───────────────── TYPES ───────────────── */
 
@@ -41,26 +46,53 @@ type Product = {
 /* ───────────────── CONSTANTS ───────────────── */
 
 const WHATSAPP_NUMBER = "+26778768259";
-const WHATSAPP_CHANNEL =
-  "https://whatsapp.com/channel/0029Vb6s2BE3LdQZJGmxQf1W";
 
 function waLink(message: string) {
   const digits = WHATSAPP_NUMBER.replace(/[^\d]/g, "");
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
+const categoryNav = [
+  { label: "Phones", href: "/c/phones", icon: <Smartphone size={18} /> },
+  { label: "Laptops", href: "/c/laptops", icon: <Laptop size={18} /> },
+  { label: "Gadgets", href: "/c/gadgets", icon: <Watch size={18} /> },
+  { label: "Clothing", href: "/c/clothing", icon: <Shirt size={18} /> },
+  { label: "Shoes", href: "/c/shoes", icon: <Footprints size={18} /> },
+  { label: "Deals", href: "/deals", icon: <Tag size={18} /> },
+];
+
+/* ───────────────── HELPERS ───────────────── */
+
+function formatPula(n: number) {
+  // simple formatting; adjust if you want commas always, etc.
+  return `P${Number.isFinite(n) ? n.toLocaleString() : n}`;
+}
+
+function getDisplayPrice(p: Product) {
+  const effective =
+    p.isDeal && typeof p.dealPrice === "number" && p.dealPrice > 0
+      ? p.dealPrice
+      : p.price;
+
+  // If you later support variants/ranges, swap this function
+  return formatPula(effective);
+}
+
 /* ───────────────── PAGE ───────────────── */
 
 export default function HomePage() {
+  const router = useRouter();
+
   const [hero, setHero] = useState<Highlight | null>(null);
-  const [gallery, setGallery] = useState<Highlight[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [tab, setTab] = useState<"all" | "new">("all");
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        /* HIGHLIGHTS */
         const hsnap = await getDocs(collection(firestore, "highlights"));
         const hdata = hsnap.docs.map((d) => ({
           id: d.id,
@@ -68,16 +100,16 @@ export default function HomePage() {
         })) as Highlight[];
 
         setHero(hdata.find((h) => h.isHero) || null);
-        setGallery(hdata.filter((h) => h.showOnHome && !h.isHero).slice(0, 4));
 
-        /* PRODUCTS */
         const psnap = await getDocs(collection(firestore, "products"));
         const pdata = psnap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as any),
         })) as Product[];
 
-        setProducts(pdata.slice(0, 8));
+        // "New Arrivals" fallback: just first slice for now
+        // (If you have createdAt later, sort by it)
+        setProducts(pdata);
       } catch (e) {
         console.error("Home load failed:", e);
       } finally {
@@ -86,166 +118,221 @@ export default function HomePage() {
     })();
   }, []);
 
+  const filtered = useMemo(() => {
+    const base = tab === "new" ? products.slice(0, 24) : products;
+    return base.slice(0, 60);
+  }, [products, tab]);
+
+  const onSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = q.trim();
+    if (!term) return;
+    router.push(`/search?q=${encodeURIComponent(term)}`);
+  };
+
   return (
-    <main className="bg-[--background] text-[--foreground] overflow-hidden">
-      {/* ───────── HERO ───────── */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-6">
-        {hero?.imageUrl && (
-          <Image
-            src={hero.imageUrl}
-            alt="Hero"
-            fill
-            priority
-            className="object-cover opacity-35"
-          />
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/80 to-black/95" />
-
-        <div className="relative z-10 text-center max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/15 bg-white/10 text-xs">
-            <Sparkles size={14} />
-            Phones • Laptops • Gadgets • More on request
-          </div>
-
-          <h1 className="mt-6 text-5xl md:text-6xl font-extrabold">
+    <main className="min-h-screen bg-[--background] text-[--foreground]">
+      {/* ───────────────── TOP BAR (szwego-like) ───────────────── */}
+      <div className="sticky top-0 z-40 bg-[--background] border-b border-[--border]">
+        <div className="px-4 py-3 flex items-center gap-3">
+          {/* Brand */}
+          <Link href="/" className="font-extrabold tracking-tight text-lg">
             iHub
-            <span className="block text-xl md:text-2xl text-white/70 mt-3">
-              Prices + Fast WhatsApp Ordering
-            </span>
-          </h1>
+          </Link>
 
-          <p className="mt-5 text-white/70 max-w-2xl mx-auto">
-            Browse prices, pick what you want, and order instantly on WhatsApp.
-          </p>
+          {/* Search */}
+          <form onSubmit={onSearch} className="flex-1">
+            <div className="relative">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[--muted]"
+              />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search iPhones, Samsung, laptops…"
+                className="w-full rounded-full border border-[--border] bg-[--surface] text-[--foreground] pl-10 pr-3 py-2.5 text-sm outline-none"
+              />
+            </div>
+          </form>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href={waLink("Hi iHub! I want to place an order.")}
-              className="px-7 py-3 rounded-full bg-white/10 border border-white/15 hover:bg-white/20 transition"
-            >
-              Order on WhatsApp
-            </a>
-            <Link
-              href="/c/phones"
-              className="px-7 py-3 rounded-full bg-blue-700 hover:brightness-110 transition"
-            >
-              Browse Prices
-            </Link>
-            <a
-              href={WHATSAPP_CHANNEL}
-              target="_blank"
-              className="px-7 py-3 rounded-full border border-white/15 hover:bg-white/10 transition"
-            >
-              Follow Channel
-            </a>
+          {/* WhatsApp CTA */}
+          <a
+            href={waLink("Hi iHub 👋 I want to check prices / place an order.")}
+            className="shrink-0 rounded-full border border-[--border] bg-[--surface] px-3 py-2 text-sm font-semibold"
+            aria-label="Order on WhatsApp"
+          >
+            WhatsApp
+          </a>
+        </div>
+
+        {/* Category icons row */}
+        <div className="px-2 pb-3 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-3 px-2">
+            {categoryNav.map((c) => (
+              <Link
+                key={c.label}
+                href={c.href}
+                className="min-w-[84px] flex flex-col items-center gap-1 rounded-2xl border border-[--border] bg-[--surface] px-3 py-2"
+              >
+                <span className="text-[--brand-primary]">{c.icon}</span>
+                <span className="text-xs font-semibold text-[--foreground]">
+                  {c.label}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
-      </section>
 
-      {/* ───────── FEATURED PRODUCTS ───────── */}
-      <section className="py-20 px-6">
-        <div className="container">
-          <h2 className="text-3xl font-extrabold mb-3">Featured Products</h2>
-          <p className="text-white/60 mb-10">
-            Latest items added by admin.
-          </p>
-
-          {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-[4/3] bg-white/10 rounded-xl animate-pulse"
-                />
-              ))}
-            </div>
-          ) : products.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-white/70">
-              No products yet.
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {products.map((p) => {
-                const price =
-                  p.isDeal && p.dealPrice ? p.dealPrice : p.price;
-
-                return (
-                  <Link
-                    key={p.id}
-                    href={`/c/${p.category}`}
-                    className="rounded-xl border border-white/10 bg-white/5 overflow-hidden hover:bg-white/10 transition"
-                  >
-                    <div className="relative aspect-[4/3] bg-black/30">
-                      <Image
-                        src={p.imageUrl || "/placeholder.png"}
-                        alt={p.name}
-                        fill
-                        className="object-cover"
-                      />
-                      {!p.inStock && (
-                        <div className="absolute top-3 left-3 text-xs px-2 py-1 bg-black/70 rounded">
-                          Out of stock
-                        </div>
-                      )}
-                      {p.isDeal && (
-                        <div className="absolute top-3 right-3 text-xs px-2 py-1 bg-blue-700 rounded">
-                          Deal
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-4">
-                      <div className="font-semibold line-clamp-1">
-                        {p.name}
-                      </div>
-                      <div className="text-sm text-white/60 mt-1">
-                        {p.brand || p.category}
-                      </div>
-                      <div className="mt-3 text-lg font-bold">
-                        P{price}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ───────── TRUST STRIP ───────── */}
-      <section className="py-16 px-6 bg-white/5">
-        <div className="container grid sm:grid-cols-3 gap-4">
-          {[
-            {
-              icon: <ShieldCheck size={18} />,
-              title: "Trusted sourcing",
-              desc: "Availability confirmed before payment.",
-            },
-            {
-              icon: <Truck size={18} />,
-              title: "Delivery options",
-              desc: "Collection or delivery arranged.",
-            },
-            {
-              icon: <MessageCircle size={18} />,
-              title: "Fast WhatsApp support",
-              desc: "Specs, prices, recommendations.",
-            },
-          ].map((i) => (
-            <div
-              key={i.title}
-              className="rounded-xl border border-white/10 bg-white/5 p-5"
+        {/* Tabs row (All / New Arrivals like screenshot) */}
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-5 text-sm font-semibold">
+            <button
+              onClick={() => setTab("all")}
+              className={`pb-2 ${
+                tab === "all"
+                  ? "text-[--foreground] border-b-2 border-[--brand-primary]"
+                  : "text-[--muted]"
+              }`}
             >
-              <div className="flex items-center gap-2 font-semibold">
-                {i.icon} {i.title}
-              </div>
-              <p className="text-sm text-white/65 mt-2">{i.desc}</p>
+              all
+            </button>
+            <button
+              onClick={() => setTab("new")}
+              className={`pb-2 ${
+                tab === "new"
+                  ? "text-[--foreground] border-b-2 border-[--brand-primary]"
+                  : "text-[--muted]"
+              }`}
+            >
+              New Arrivals
+            </button>
+
+            <div className="ml-auto text-xs text-[--muted] flex items-center gap-2">
+              <Sparkles size={14} />
+              Order via WhatsApp
             </div>
-          ))}
+          </div>
         </div>
+      </div>
+
+      {/* ───────────────── HERO BANNER (optional, keeps your highlight) ───────────────── */}
+      {hero?.imageUrl && (
+        <section className="px-4 pt-4">
+          <div className="relative overflow-hidden rounded-2xl border border-[--border] bg-[--surface] aspect-[16/7]">
+            <Image
+              src={hero.imageUrl}
+              alt={hero.title || "iHub banner"}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+            <div className="absolute left-4 bottom-4 right-4">
+              <div className="text-white font-extrabold text-lg leading-tight">
+                {hero.title || "iHub"}
+              </div>
+              <div className="text-white/85 text-sm line-clamp-2">
+                {hero.desc || "Browse prices and order fast on WhatsApp."}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ───────────────── PRODUCT GRID (tight mobile store grid) ───────────────── */}
+      <section className="px-4 py-5">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-[--border] bg-[--surface] overflow-hidden"
+              >
+                <div className="aspect-square bg-white/10 animate-pulse" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 bg-white/10 rounded animate-pulse" />
+                  <div className="h-3 w-2/3 bg-white/10 rounded animate-pulse" />
+                  <div className="h-4 w-1/2 bg-white/10 rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl border border-[--border] bg-[--surface] p-8 text-center text-[--muted]">
+            No products yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map((p) => (
+              <Link
+                key={p.id}
+                href={`/c/${p.category}`}
+                className="rounded-2xl border border-[--border] bg-[--surface] overflow-hidden active:scale-[0.99] transition"
+              >
+                <div className="relative aspect-square bg-black/10">
+                  <Image
+                    src={p.imageUrl || "/placeholder.png"}
+                    alt={p.name}
+                    fill
+                    className="object-cover"
+                  />
+
+                  {/* badges */}
+                  {!p.inStock && (
+                    <div className="absolute top-2 left-2 text-[10px] px-2 py-1 rounded-full bg-black/70 text-white">
+                      Out of stock
+                    </div>
+                  )}
+                  {p.isDeal && (
+                    <div className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded-full bg-[--brand-primary] text-white">
+                      Deal
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3">
+                  <div className="text-sm font-semibold line-clamp-2 leading-snug">
+                    {p.name}
+                  </div>
+                  <div className="mt-1 text-[11px] text-[--muted] line-clamp-1">
+                    {p.brand || p.category}
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="text-[15px] font-extrabold text-red-500">
+                      {getDisplayPrice(p)}
+                    </div>
+
+                    {/* cart icon (visual only like screenshot) */}
+                    <span className="grid place-items-center h-9 w-9 rounded-full border border-[--border] bg-[--background]">
+                      <ShoppingCart size={16} className="text-[--muted]" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
+
+      {/* ───────────────── BOTTOM CTA STRIP ───────────────── */}
+      <div className="sticky bottom-0 z-30 border-t border-[--border] bg-[--background]">
+        <div className="px-4 py-3 flex items-center gap-3">
+          <a
+            href={waLink("Hi iHub 👋 I want to place an order.")}
+            className="flex-1 rounded-full bg-[--brand-primary] text-white px-4 py-3 font-extrabold text-sm text-center"
+          >
+            Order on WhatsApp
+          </a>
+          <Link
+            href="/c/phones"
+            className="rounded-full border border-[--border] bg-[--surface] px-4 py-3 font-semibold text-sm"
+          >
+            Browse
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
